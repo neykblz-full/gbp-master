@@ -1,0 +1,15 @@
+CREATE SCHEMA IF NOT EXISTS "public";
+CREATE TYPE "BusinessStatus" AS ENUM ('ACTIVE', 'ARCHIVED');
+CREATE TYPE "AuditStatus" AS ENUM ('GOOD', 'WARNING', 'BAD', 'UNKNOWN');
+CREATE TABLE "User" ("id" TEXT NOT NULL, "email" TEXT NOT NULL, "name" TEXT NOT NULL, "passwordHash" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "User_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Business" ("id" TEXT NOT NULL, "ownerId" TEXT NOT NULL, "name" TEXT NOT NULL, "address" TEXT, "city" TEXT, "state" TEXT, "postalCode" TEXT, "phone" TEXT, "website" TEXT, "mapsUrl" TEXT, "primaryCategory" TEXT, "secondaryCategories" TEXT NOT NULL DEFAULT '[]', "description" TEXT, "hours" TEXT NOT NULL DEFAULT '{}', "serviceArea" TEXT, "notes" TEXT, "status" "BusinessStatus" NOT NULL DEFAULT 'ACTIVE', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "Business_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Audit" ("id" TEXT NOT NULL, "businessId" TEXT NOT NULL, "score" INTEGER NOT NULL, "goodCount" INTEGER NOT NULL DEFAULT 0, "warningCount" INTEGER NOT NULL DEFAULT 0, "badCount" INTEGER NOT NULL DEFAULT 0, "unknownCount" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Audit_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "AuditItem" ("id" TEXT NOT NULL, "auditId" TEXT NOT NULL, "category" TEXT NOT NULL, "title" TEXT NOT NULL, "description" TEXT NOT NULL, "recommendation" TEXT NOT NULL, "status" "AuditStatus" NOT NULL, "weight" INTEGER NOT NULL, CONSTRAINT "AuditItem_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Review" ("id" TEXT NOT NULL, "businessId" TEXT NOT NULL, "rating" INTEGER NOT NULL, "text" TEXT, "author" TEXT, "replied" BOOLEAN NOT NULL DEFAULT false, "reply" TEXT, "source" TEXT NOT NULL DEFAULT 'MANUAL', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Review_pkey" PRIMARY KEY ("id"));
+CREATE TABLE "Post" ("id" TEXT NOT NULL, "businessId" TEXT NOT NULL, "title" TEXT NOT NULL, "content" TEXT NOT NULL, "type" TEXT NOT NULL, "scheduledAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "Post_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+ALTER TABLE "Business" ADD CONSTRAINT "Business_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Audit" ADD CONSTRAINT "Audit_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "AuditItem" ADD CONSTRAINT "AuditItem_auditId_fkey" FOREIGN KEY ("auditId") REFERENCES "Audit"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Review" ADD CONSTRAINT "Review_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Post" ADD CONSTRAINT "Post_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE CASCADE ON UPDATE CASCADE;
