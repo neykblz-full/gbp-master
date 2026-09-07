@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  name String
+  passwordHash String
+  businesses Business[]
+  createdAt DateTime @default(now())
+}
+
+model Business {
+  id String @id @default(cuid())
+  ownerId String
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name String
+  address String?
+  city String?
+  state String?
+  postalCode String?
+  phone String?
+  website String?
+  mapsUrl String?
+  primaryCategory String?
+  secondaryCategories String @default("[]")
+  description String?
+  hours String @default("{}")
+  serviceArea String?
+  notes String?
+  status BusinessStatus @default(ACTIVE)
+  audits Audit[]
+  reviews Review[]
+  posts Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum BusinessStatus {
+  ACTIVE
+  ARCHIVED
+}
+model Audit {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  score Int
+  goodCount Int @default(0)
+  warningCount Int @default(0)
+  badCount Int @default(0)
+  unknownCount Int @default(0)
+  items AuditItem[]
+  createdAt DateTime @default(now())
+}
+model AuditItem {
+  id String @id @default(cuid())
+  auditId String
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  category String
+  title String
+  description String
+  recommendation String
+  status AuditStatus
+  weight Int
+}
+enum AuditStatus {
+  GOOD
+  WARNING
+  BAD
+  UNKNOWN
+}
+model Review {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  rating Int
+  text String?
+  author String?
+  replied Boolean @default(false)
+  reply String?
+  source String @default("MANUAL")
+  createdAt DateTime @default(now())
+}
+model Post {
+  id String @id @default(cuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title String
+  content String
+  type String
+  scheduledAt DateTime?
+  createdAt DateTime @default(now())
+}
